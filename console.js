@@ -8,6 +8,13 @@
     const capturedLinks = new Set();
     const videoUrls = new Set();
     
+    // Функция проверки, является ли URL видео-ссылкой VK
+    function isVkVideoUrl(url) {
+        return typeof url === 'string' && 
+               url.includes('vkvd') && 
+               (url.includes('okcdn.ru') || url.includes('vkuser.net'));
+    }
+    
     // Функция модификации ссылки
     function modifyVideoUrl(url) {
         try {
@@ -100,10 +107,10 @@
         let url = args[0];
         
         // Проверяем, является ли URL ссылкой на видеофрагмент
-        if (typeof url === 'string' && url.includes('vkvd') && url.includes('okcdn.ru')) {
+        if (isVkVideoUrl(url)) {
             const modifiedUrl = modifyVideoUrl(url);
             args[0] = modifiedUrl;
-        } else if (url instanceof Request && url.url.includes('vkvd') && url.url.includes('okcdn.ru')) {
+        } else if (url instanceof Request && isVkVideoUrl(url.url)) {
             const modifiedUrl = modifyVideoUrl(url.url);
             const newRequest = new Request(modifiedUrl, url);
             args[0] = newRequest;
@@ -115,7 +122,7 @@
     // Перехват XMLHttpRequest
     const originalOpen = XMLHttpRequest.prototype.open;
     XMLHttpRequest.prototype.open = function(method, url, ...rest) {
-        if (typeof url === 'string' && url.includes('vkvd') && url.includes('okcdn.ru')) {
+        if (isVkVideoUrl(url)) {
             const modifiedUrl = modifyVideoUrl(url);
             return originalOpen.call(this, method, modifiedUrl, ...rest);
         }
@@ -130,7 +137,7 @@
         if (tagName.toLowerCase() === 'video' || tagName.toLowerCase() === 'source') {
             const originalSetAttribute = element.setAttribute;
             element.setAttribute = function(name, value) {
-                if (name === 'src' && typeof value === 'string' && value.includes('vkvd') && value.includes('okcdn.ru')) {
+                if (name === 'src' && isVkVideoUrl(value)) {
                     value = modifyVideoUrl(value);
                 }
                 return originalSetAttribute.call(this, name, value);
@@ -142,7 +149,7 @@
                     return this.getAttribute('src');
                 },
                 set: function(value) {
-                    if (typeof value === 'string' && value.includes('vkvd') && value.includes('okcdn.ru')) {
+                    if (isVkVideoUrl(value)) {
                         value = modifyVideoUrl(value);
                     }
                     this.setAttribute('src', value);
@@ -309,7 +316,7 @@
     if (window.PerformanceObserver) {
         const observer = new PerformanceObserver((list) => {
             list.getEntries().forEach((entry) => {
-                if (entry.name && entry.name.includes('vkvd') && entry.name.includes('okcdn.ru')) {
+                if (entry.name && isVkVideoUrl(entry.name)) {
                     // Проверяем, не обработали ли мы уже эту ссылку
                     if (!capturedLinks.has(entry.name)) {
                         modifyVideoUrl(entry.name);
