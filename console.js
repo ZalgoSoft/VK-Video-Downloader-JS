@@ -11,8 +11,8 @@
     // Функция проверки, является ли URL видео-ссылкой VK
     function isVkVideoUrl(url) {
         return typeof url === 'string' && 
-               url.includes('vkvd') && 
-               (url.includes('okcdn.ru') || url.includes('vkuser.net'));
+               ( url.includes('vkvd') && url.includes('okcdn.ru') || url.includes('vkuser.net'));
+
     }
     
     // Функция модификации ссылки
